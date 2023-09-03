@@ -1,70 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class PortOverviewPage extends StatelessWidget {
+class PortOverviewPage extends StatefulWidget {
   final Widget homePage;
 
   PortOverviewPage({required this.homePage});
 
   @override
   Widget build(BuildContext context) {
-    // Check if the screen is in portrait mode
-    bool isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    // Get the list of available ports
+    List<int> ports = await Platform.availablePorts();
+
+    // Get the percentage of open ports
+    int openPorts = ports.where((port) => port >= 1024).length;
+    int closedPorts = ports.length - openPorts;
+    double percentage = (openPorts / ports.length) * 100;
+
+    // Create the pie chart data
+    List<PieChartSectionData> pieChartData = [
+      PieChartSectionData(
+        value: percentage,
+        color: Colors.green[600]!,
+        title: 'Open Ports (${openPorts})',
+      ),
+      PieChartSectionData(
+        value: 100 - percentage,
+        color: Colors.red[600]!,
+        title: 'Closed Ports (${closedPorts})',
+      ),
+    ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Port Overview'),
       ),
-      body: isPortrait
-          ? _buildPortraitContent()
-          : _buildLandscapeContent(), // Choose content based on orientation
-    );
-  }
-
-  Widget _buildPortraitContent() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Port Security Status',
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 5),
-          _buildProgressBarChart(),
-          _buildNumberInfoContainer(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLandscapeContent() {
-    return SingleChildScrollView(
-      child: Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 15),
             const Text(
               'Port Security Status',
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 5),
-            _buildProgressBarChart(),
-            _buildNumberInfoContainer(),
+            _buildProgressBarChart(pieChartData),
+            _buildNumberInfoContainer(openPorts, closedPorts),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProgressBarChart() {
-    double percentage = 75; // Replace with your desired percentage value
-
+  Widget _buildProgressBarChart(List<PieChartSectionData> pieChartData) {
     return Column(
       children: [
         Text(
-          '${percentage.toInt()}%',
+          '${pieChartData[0].value.toInt()}%',
           style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 15),
@@ -73,18 +64,7 @@ class PortOverviewPage extends StatelessWidget {
           width: 150,
           child: PieChart(
             PieChartData(
-              sections: [
-                PieChartSectionData(
-                  value: percentage,
-                  color: Colors.green[600]!,
-                  title: '',
-                ),
-                PieChartSectionData(
-                  value: 100 - percentage,
-                  color: Colors.red[600]!,
-                  title: '',
-                ),
-              ],
+              sections: pieChartData,
             ),
           ),
         ),
@@ -92,7 +72,7 @@ class PortOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNumberInfoContainer() {
+  Widget _buildNumberInfoContainer(int openPorts, int closedPorts) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -111,7 +91,7 @@ class PortOverviewPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Add text color
+                  color: Colors.black,
                 ),
               ),
               Text(
@@ -119,7 +99,7 @@ class PortOverviewPage extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 25,
-                  color: Colors.green, // Add text color
+                  color: Colors.green,
                 ),
               ),
             ],
@@ -131,7 +111,7 @@ class PortOverviewPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Add text color
+                  color: Colors.black,
                 ),
               ),
               Text(
@@ -139,7 +119,7 @@ class PortOverviewPage extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 25,
-                  color: Colors.red, // Add text color
+                  color: Colors.red,
                 ),
               ),
             ],
